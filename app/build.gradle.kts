@@ -63,6 +63,8 @@ dependencies {
     implementation(libs.dagger.hilt)
     ksp(libs.dagger.hilt.android.compiler)
     ksp(libs.dagger.hilt.compiler)
+    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
+
 
     // Room
     implementation(libs.room.runtime)
@@ -72,4 +74,8 @@ dependencies {
     // ViewModel
     implementation(libs.compose.lifecycle.viewmodel)
     implementation(libs.compose.lifecycle.runtime)
+
+    //location
+    implementation ("com.google.android.gms:play-services-location:21.3.0")
+
 }
