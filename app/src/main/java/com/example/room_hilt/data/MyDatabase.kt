@@ -7,6 +7,8 @@ import dagger.Module
 import dagger.Provides
 import android.content.Context
 import androidx.room.Room
+import androidx.work.WorkManager
+import com.example.room_hilt.domain.usecase.AddItemUseCase
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
@@ -35,5 +37,17 @@ object DatabaseModule {
     @Provides
     fun provideItemDao(database: MyDatabase): ItemDao {
         return database.itemDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideAddItemUseCase(repository: ItemRepository): AddItemUseCase {
+        return AddItemUseCase(repository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideWorkmanager(@ApplicationContext context: Context): WorkManager {
+        return WorkManager.getInstance(context)
     }
 }

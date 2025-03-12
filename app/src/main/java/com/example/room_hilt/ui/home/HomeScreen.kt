@@ -1,3 +1,5 @@
+package com.example.room_hilt.ui.home
+
 import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Location
@@ -18,20 +20,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
-import com.example.room_hilt.ui.home.HomeViewModel
-import com.example.room_hilt.ui.home.LocationUtils
 import android.Manifest
+import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.collectAsState
 import com.example.room_hilt.data.MyItem
-// for a 'val' variable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.room_hilt.ui.home.ItemUiState
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import com.example.room_hilt.data.BackgroundWorker
 
 @Composable
 fun LocationScreen(viewModel: HomeViewModel = hiltViewModel()) {
@@ -39,33 +41,31 @@ fun LocationScreen(viewModel: HomeViewModel = hiltViewModel()) {
     var locationPermissionsAlreadyGranted = remember { mutableStateOf(false) }
 
     locationPermissionsAlreadyGranted.value = ActivityCompat.checkSelfPermission(
-        context,
-        Manifest.permission.ACCESS_FINE_LOCATION
+        context, Manifest.permission.ACCESS_FINE_LOCATION
     ) == PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(
-        context,
-        Manifest.permission.ACCESS_COARSE_LOCATION
+        context, Manifest.permission.ACCESS_COARSE_LOCATION
     ) == PackageManager.PERMISSION_GRANTED
 
     val locationPermissions = arrayOf(
         Manifest.permission.ACCESS_FINE_LOCATION,
-        Manifest.permission.ACCESS_COARSE_LOCATION
+        Manifest.permission.ACCESS_COARSE_LOCATION,
+        Manifest.permission.ACCESS_BACKGROUND_LOCATION
     )
 
-    val locationPermissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestMultiplePermissions(),
-        onResult = { permissions ->
-            val permissionsGranted = permissions.values.reduce { acc, isPermissionGranted ->
-                acc && isPermissionGranted
-            }
-            locationPermissionsAlreadyGranted.value = permissionsGranted
+    val locationPermissionLauncher =
+        rememberLauncherForActivityResult(contract = ActivityResultContracts.RequestMultiplePermissions(),
+            onResult = { permissions ->
+                val permissionsGranted = permissions.values.reduce { acc, isPermissionGranted ->
+                    acc && isPermissionGranted
+                }
+                locationPermissionsAlreadyGranted.value = permissionsGranted
 
-            if (!permissionsGranted) {
-                //Logic when the permissions were not granted by the user
-            }
-        })
+                if (!permissionsGranted) {
+                    //Logic when the permissions were not granted by the user
+                }
+            })
 
     val locationEnabledState = remember { mutableStateOf(false) }
-    val locationState = remember { mutableStateOf<Location?>(null) }
     val uiState by viewModel.uiState.collectAsState()
 
 
@@ -88,8 +88,7 @@ fun LocationScreen(viewModel: HomeViewModel = hiltViewModel()) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Button(onClick = {
                     locationPermissionLauncher.launch(locationPermissions)
-                }
-                ) {
+                }) {
                     Text("Grant Permission")
                 }
             }
@@ -101,18 +100,7 @@ fun LocationScreen(viewModel: HomeViewModel = hiltViewModel()) {
             else -> {
                 Text("GPS is ON and Permission is granted")
                 Spacer(modifier = Modifier.height(8.dp))
-                Button(onClick = {
-                    LocationUtils.requestCurrentLocation(context) { location ->
-                        locationState.value = location
-                        location?.let {
-                            val myItem = MyItem(
-                                latitude = it.latitude, longitude = it.longitude,
-                                timestamp = System.currentTimeMillis()
-                            )
-                            viewModel.addItem(myItem)
-                        }
-                    }
-                }) {
+                Button(onClick = {scheduleBackgroundWorker(context)}) {
                     Text("Start")
                 }
             }
@@ -132,7 +120,6 @@ fun LocationScreen(viewModel: HomeViewModel = hiltViewModel()) {
                 Text("Error: $message", color = Color.Red)
             }
 
-
         }
     }
 }
@@ -141,11 +128,15 @@ fun LocationScreen(viewModel: HomeViewModel = hiltViewModel()) {
 fun ItemList(locations: List<MyItem>) {
     Column {
         locations.forEach { location ->
-            Text(text = location.latitude.toString() + ", " + location.longitude.toString()) // Replace with your UI representation
+            Text(text = location.latitude.toString() + ",    " + location.longitude.toString() + " -- "+location.timestamp) // Replace with your UI representation
         }
     }
 }
 
-fun launchPermissionRequest() {
 
+
+fun scheduleBackgroundWorker(context: Context) {
+    val workRequest = OneTimeWorkRequestBuilder<BackgroundWorker>()
+        .build()
+    WorkManager.getInstance(context).enqueue(workRequest)
 }

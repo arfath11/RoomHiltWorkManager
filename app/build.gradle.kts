@@ -62,7 +62,7 @@ dependencies {
     // Hilt
     implementation(libs.dagger.hilt)
     ksp(libs.dagger.hilt.android.compiler)
-    ksp(libs.dagger.hilt.compiler)
+  //  ksp(libs.dagger.hilt.compiler)
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
 
 
@@ -76,6 +76,14 @@ dependencies {
     implementation(libs.compose.lifecycle.runtime)
 
     //location
-    implementation ("com.google.android.gms:play-services-location:21.3.0")
+    implementation("com.google.android.gms:play-services-location:21.3.0")
+
+
+    //work manager
+    implementation("androidx.hilt:hilt-work:1.2.0")
+    val work_version = "2.10.0"
+    implementation("androidx.work:work-runtime-ktx:$work_version")
+    // optional - Test helpers
+    androidTestImplementation("androidx.work:work-testing:$work_version")
 
 }
