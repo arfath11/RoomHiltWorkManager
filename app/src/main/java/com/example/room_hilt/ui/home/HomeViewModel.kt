@@ -11,12 +11,18 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import com.example.room_hilt.domain.model.Result
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
+import com.example.room_hilt.data.worker.BackgroundWorker
+import java.util.concurrent.TimeUnit
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val getItemsUseCase: GetItemsUseCase,
     private val addItemUseCase: AddItemUseCase,
-    private val deleteItemUseCase: DeleteItemUseCase
+    private val deleteItemUseCase: DeleteItemUseCase,
+    private val workManager: WorkManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<ItemUiState>(ItemUiState.Loading)
@@ -61,5 +67,16 @@ class HomeViewModel @Inject constructor(
                     ItemUiState.Error(result.exception.message ?: "Failed to delete item")
             }
         }
+    }
+
+    fun scheduleBackgroundWorker() {
+        val workRequest = PeriodicWorkRequestBuilder<BackgroundWorker>(15, TimeUnit.MINUTES)
+            .build()
+
+        workManager.enqueueUniquePeriodicWork(
+            "BackgroundWorker", // Unique name
+            ExistingPeriodicWorkPolicy.REPLACE, // Replace existing work if already scheduled
+            workRequest
+        )
     }
 }

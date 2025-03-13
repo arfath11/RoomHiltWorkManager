@@ -171,16 +171,7 @@ fun formatDistance(distanceInMeters: Float): String {
 }
 
 
-fun scheduleBackgroundWorker(context: Context) {
-    val workRequest = PeriodicWorkRequestBuilder<BackgroundWorker>(15, TimeUnit.MINUTES)
-        .build()
 
-    WorkManager.getInstance(context).enqueueUniquePeriodicWork(
-        "BackgroundWorker", // Unique name
-        ExistingPeriodicWorkPolicy.REPLACE, // Replace existing work if already scheduled
-        workRequest
-    )
-}
 @Composable
 fun MyButtons(viewModel: HomeViewModel = hiltViewModel(), context: Context = LocalContext.current) {
     Column(
@@ -195,7 +186,10 @@ fun MyButtons(viewModel: HomeViewModel = hiltViewModel(), context: Context = Loc
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(16.dp)
         ) {
-            Button(onClick = { scheduleBackgroundWorker(context) }) {
+            Button(onClick = {
+              //  scheduleBackgroundWorker(context)
+               viewModel.scheduleBackgroundWorker()
+            }) {
                 Text("Start")
             }
 
