@@ -129,27 +129,26 @@ fun LocationScreen(viewModel: HomeViewModel = hiltViewModel()) {
 @Composable
 fun ItemList(locations: List<MyItem>) {
     val timeFormatter = SimpleDateFormat("HH:mm", Locale.getDefault())
+    var previousLocation: MyItem? = null
 
     Column(modifier = Modifier.padding(16.dp)) {
-        var previousLocation: MyItem? = null
-
         locations.forEach { currentLocation ->
             val formattedTime = timeFormatter.format(Date(currentLocation.timestamp))
 
             val distanceText = if (previousLocation != null) {
-                val results = FloatArray(1)
+                val distanceInMeters = FloatArray(1)
                 Location.distanceBetween(
                     previousLocation!!.latitude, previousLocation!!.longitude,
                     currentLocation.latitude, currentLocation.longitude,
-                    results
+                    distanceInMeters
                 )
-                "Distance: ${results[0]} meters"
+                formatDistance(distanceInMeters[0])
             } else {
                 "First recorded location"
             }
 
             Text(
-                text = "${currentLocation.latitude}, ${currentLocation.longitude} -- $formattedTime", // Show formatted time
+                text = "${currentLocation.latitude}, ${currentLocation.longitude} -- $formattedTime",
                 modifier = Modifier.padding(bottom = 4.dp)
             )
             Text(
@@ -161,6 +160,16 @@ fun ItemList(locations: List<MyItem>) {
         }
     }
 }
+
+fun formatDistance(distanceInMeters: Float): String {
+    return if (distanceInMeters < 1000) {
+        "Distance: %.2f meters".format(distanceInMeters)
+    } else {
+        val distanceInKilometers = distanceInMeters / 1000
+        "Distance: %.2f km".format(distanceInKilometers)
+    }
+}
+
 
 fun scheduleBackgroundWorker(context: Context) {
     val workRequest = PeriodicWorkRequestBuilder<BackgroundWorker>(15, TimeUnit.MINUTES)

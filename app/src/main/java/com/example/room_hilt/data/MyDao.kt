@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface ItemDao {
 
-    @Query("SELECT * FROM MyTable ORDER BY timestamp DESC")
+    @Query("SELECT * FROM MyTable ORDER BY timestamp ASC")
     fun getAllItems(): Flow<List<MyItem>>
 
 
