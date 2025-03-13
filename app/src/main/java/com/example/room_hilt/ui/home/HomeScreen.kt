@@ -2,7 +2,6 @@ package com.example.room_hilt.ui.home
 
 import android.content.Context
 import android.content.pm.PackageManager
-import android.location.Location
 import android.location.LocationManager
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -21,19 +20,25 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import android.Manifest
-import android.os.Build
+import android.location.Location
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.RequiresApi
+import androidx.compose.foundation.layout.Row
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.runtime.collectAsState
 import com.example.room_hilt.data.MyItem
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
-import com.example.room_hilt.data.BackgroundWorker
+import com.example.room_hilt.data.worker.BackgroundWorker
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.concurrent.TimeUnit
 
 @Composable
 fun LocationScreen(viewModel: HomeViewModel = hiltViewModel()) {
@@ -98,11 +103,7 @@ fun LocationScreen(viewModel: HomeViewModel = hiltViewModel()) {
             }
 
             else -> {
-                Text("GPS is ON and Permission is granted")
-                Spacer(modifier = Modifier.height(8.dp))
-                Button(onClick = {scheduleBackgroundWorker(context)}) {
-                    Text("Start")
-                }
+              MyButtons()
             }
         }
 
@@ -124,19 +125,77 @@ fun LocationScreen(viewModel: HomeViewModel = hiltViewModel()) {
     }
 }
 
+
 @Composable
 fun ItemList(locations: List<MyItem>) {
-    Column {
-        locations.forEach { location ->
-            Text(text = location.latitude.toString() + ",    " + location.longitude.toString() + " -- "+location.timestamp) // Replace with your UI representation
+    val timeFormatter = SimpleDateFormat("HH:mm", Locale.getDefault())
+
+    Column(modifier = Modifier.padding(16.dp)) {
+        var previousLocation: MyItem? = null
+
+        locations.forEach { currentLocation ->
+            val formattedTime = timeFormatter.format(Date(currentLocation.timestamp))
+
+            val distanceText = if (previousLocation != null) {
+                val results = FloatArray(1)
+                Location.distanceBetween(
+                    previousLocation!!.latitude, previousLocation!!.longitude,
+                    currentLocation.latitude, currentLocation.longitude,
+                    results
+                )
+                "Distance: ${results[0]} meters"
+            } else {
+                "First recorded location"
+            }
+
+            Text(
+                text = "${currentLocation.latitude}, ${currentLocation.longitude} -- $formattedTime", // Show formatted time
+                modifier = Modifier.padding(bottom = 4.dp)
+            )
+            Text(
+                text = distanceText,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+
+            previousLocation = currentLocation
         }
     }
 }
 
-
-
 fun scheduleBackgroundWorker(context: Context) {
-    val workRequest = OneTimeWorkRequestBuilder<BackgroundWorker>()
+    val workRequest = PeriodicWorkRequestBuilder<BackgroundWorker>(15, TimeUnit.MINUTES)
         .build()
-    WorkManager.getInstance(context).enqueue(workRequest)
+
+    WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+        "BackgroundWorker", // Unique name
+        ExistingPeriodicWorkPolicy.REPLACE, // Replace existing work if already scheduled
+        workRequest
+    )
+}
+@Composable
+fun MyButtons(viewModel: HomeViewModel = hiltViewModel(), context: Context = LocalContext.current) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text("GPS is ON and Permission is granted")
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Button(onClick = { scheduleBackgroundWorker(context) }) {
+                Text("Start")
+            }
+
+            Button(
+                onClick = { viewModel.deleteAllItem() },
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+            ) {
+                Text("Delete All", color = Color.White)
+            }
+        }
+    }
 }

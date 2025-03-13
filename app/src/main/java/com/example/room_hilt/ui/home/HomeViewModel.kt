@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import com.example.room_hilt.domain.usecase.Result
+import com.example.room_hilt.domain.model.Result
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(

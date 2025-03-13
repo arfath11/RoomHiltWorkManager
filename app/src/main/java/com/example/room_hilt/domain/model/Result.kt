@@ -1,4 +1,4 @@
-package com.example.room_hilt.domain.usecase
+package com.example.room_hilt.domain.model
 
 sealed class Result<out T> {
     data class Success<out T>(val data: T) : Result<T>()

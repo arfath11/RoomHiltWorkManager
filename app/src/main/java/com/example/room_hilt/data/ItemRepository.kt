@@ -1,6 +1,6 @@
 package com.example.room_hilt.data
 
-import com.example.room_hilt.domain.usecase.Result
+import com.example.room_hilt.domain.model.Result
 import kotlinx.coroutines.flow.Flow
 
 

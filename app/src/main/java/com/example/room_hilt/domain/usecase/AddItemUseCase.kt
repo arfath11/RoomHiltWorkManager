@@ -2,6 +2,7 @@ package com.example.room_hilt.domain.usecase
 
 import com.example.room_hilt.data.ItemRepository
 import com.example.room_hilt.data.MyItem
+import com.example.room_hilt.domain.model.Result
 import javax.inject.Inject
 
 class AddItemUseCase @Inject constructor(private  val repository: ItemRepository){

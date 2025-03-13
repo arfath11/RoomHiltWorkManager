@@ -33,21 +33,12 @@ object DatabaseModule {
             .fallbackToDestructiveMigration()
             .build()
     }
-
     @Provides
     fun provideItemDao(database: MyDatabase): ItemDao {
         return database.itemDao()
     }
 
-    @Provides
-    @Singleton
-    fun provideAddItemUseCase(repository: ItemRepository): AddItemUseCase {
-        return AddItemUseCase(repository)
-    }
 
-    @Provides
-    @Singleton
-    fun provideWorkmanager(@ApplicationContext context: Context): WorkManager {
-        return WorkManager.getInstance(context)
-    }
+
+
 }
